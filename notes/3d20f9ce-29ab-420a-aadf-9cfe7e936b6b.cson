@@ -1,0 +1,16 @@
+createdAt: "2019-12-05T09:36:39.486Z"
+updatedAt: "2019-12-05T10:10:10.376Z"
+type: "MARKDOWN_NOTE"
+folder: "58a5d51f09911f5a02b7"
+title: "Sweetest build"
+tags: []
+content: '''
+  # Sweetest build
+  set GOENV=container&& set GOOS=linux&& set GOARCH=amd64&& go build -o sweeTest
+  
+  # SCP to sweet
+   INSERT INTO assistants (student_no,first_name, last_name, email, digest) VALUES ('19675002','Tsubasa','Imamura','email@doma.in','$2a$10$PsGGPmn9etycX13DCmv2e.Cb0mIfyUzRQia7GMOYH.boRFvN/kJ56')
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false

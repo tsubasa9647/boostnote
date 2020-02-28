@@ -1,0 +1,905 @@
+createdAt: "2019-11-26T07:38:34.968Z"
+updatedAt: "2019-11-26T07:43:23.506Z"
+type: "MARKDOWN_NOTE"
+folder: "58a5d51f09911f5a02b7"
+title: "クリーンアーキテクチャモデル"
+tags: []
+content: '''
+  # クリーンアーキテクチャモデル
+  # はじめに
+  書籍クリーンアーキテクチャの日本語訳がつい先日発売されました。
+  皆さんはもう読みましたでしょうか。
+  ソフトウェアの寿命を延ばすための方法や一般的なオブジェクト指向原則等々、良い話が幾つもあったかと思います。
+  
+  さて、このクリーンアーキテクチャの最も象徴的なものといえばこの図です。
+  ![clean.jpg](https://qiita-image-store.s3.amazonaws.com/0/293368/7ce1fb10-504e-16e0-8930-278b8a7f942d.jpeg)
+  皆さんこの図をすんなりと理解できましたか。
+  勿論、私は理解できませんでした。
+  
+  この図は抽象的なものかなーと最初は見ていたのですが、実はこの図をよく見ると、非常に具体的なものが描かれたりしています。
+  それはこの右下の部分です。
+  ![clean_migisita.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/c2825c47-5ab2-9202-73a6-24786f3a4db5.jpeg)
+  右下のこの部分、実は小さなクラス図的なものになっています。
+  白抜き矢印が汎化だったり、矢印が依存だったり。
+  
+  そして更にボブおじさんの記事を漁ったり、書籍を読んだりしているとこんな図にも出会うのではないでしょうか。
+  ![clean_boundary.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/3ef1e900-8e74-c954-2a33-4f46c7569244.jpeg)
+  これなんかはまさに具体的なクラス構成です。
+  
+  こんな具体的なものが用意されているのであればもう実装してみるしかないと思いませんか。
+  そんなわけで実装例を記事にしてみようと思います。
+  
+  # サンプルソース
+  https://github.com/nrslib/CleanArchitecture
+  C# です。この記事の最終系です。
+  記事を読んでからの方がわかりやすいかと思います。
+  プロジェクト構成などは実際のプロダクトと同じ形にしているのでよければご参考ください。
+  
+  # 同心円の図の説明
+  すぐに実装例に移りたいところですが、実装するためには図の理解が欠かせません。
+  まずは図の解説をしましょう。
+  
+  同心円の図はレイヤーを表しています。
+  レイヤーの名前はここです。
+  ![clean_layer.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/578d4b20-bd79-1933-e08d-9f6cf306e605.jpeg)
+  一つずつ解説します。
+  
+  ## Enterprise Business Rules
+  黄色のレイヤーの Enterprise Business Rules はビジネスロジックを表現するオブジェクトが所属するレイヤーです。
+  トランザクションスクリプトやドメイン駆動設計でいうところのエンティティなどはここに所属します。
+  このレイヤーは最も大事なものです。
+  
+  ## Application Business Rules
+  赤いレイヤーは Application Business Rules です。
+  このレイヤーは「ソフトウェアが何ができるのか」を表現します。
+  Enterprise Business Rules に所属するオブジェクトを協調させ、ユースケースを達成します。
+  ドメイン駆動設計でいうところのアプリケーションサービスなんかはここの住人です。
+  
+  ## Interface Adapters
+  緑色のレイヤーは Interface Adapters で入力、永続化、表示を担当するオブジェクトが所属します。
+  入力とは Application Business Rules に伝えるためのデータ加工を指します。
+  永続化とはデータの保存を指します。
+  表示は結果の表示です。
+  
+  一般的な MVC フレームワークや単体テストクラスなどはこのレイヤーに所属されます。
+  
+  ## Frameworks & Drivers
+  Web フレームワークやデータベース操作オブジェクトなどのギークなコードがここに収まります。
+  フロントエンドの UI などもここに所属しています。
+  
+  ## 矢印の方向
+  ![clean-arrow.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/64cfe1fb-b353-3263-ae14-156dda662eec.jpeg)
+  この矢印は依存の方向性を表しています。
+  
+  ```csharp
+  public class UserRepository{
+    public void Save(User user){
+      // 保存処理
+    }
+  }
+  
+  public class CreateUser{
+    private readonly UserRepository userRepository;
+  
+    public CreateUser(UserRepository userRepository){ // ← UserRepository が必要なので UserRepository に依存している
+      this.userRepository = userRepository;
+    }
+  }
+  ```
+  CreateUser クラスがコンポジションしている UserRepository は具象クラスです。
+  この場合、CreateUser クラスは UserRepository という具象クラスに依存していると表現します。
+  
+  次の例を見てください。
+  
+  ```cs
+  public interface IUserRepository{
+    public void Save(User user);
+  }
+  
+  public class UserRepository : IUserRepository {
+    public void Save(User user){
+      // 保存処理
+    }
+  }
+  
+  public class CreateUser{
+    private readonly IUserRepository userRepository;
+  
+    public CreateUser(IUserRepository userRepository) { // userRepository には UserRepository オブジェクトが代入されている
+      this.userRepository = userRepository;
+    }
+  }
+  ```
+  こちらの場合の CreateUser は IUserRepository をコンポジションしており、IUserRepository に依存している状態です。
+  
+  これはプログラミングのテクニックで「インターフェースに対してプログラミングする」や「オブジェクトではなく抽象に依存せよ」といった原則に従った場合のコードです。
+  この原則を守ると、モジュールは特定の具象クラスに依存しないようになります（CreateUser クラスのスコープ上では UserRepository というクラスは一切表れておりません）。
+  
+  抽象をコンストラクタで受け取るようにモジュールを作ると、動作時に依存すべき具象クラスはなんらかの形（サンプルではコンストラクタ）で引き渡されるようになるため、同じ処理でも柔軟性を持たせることができます。
+  つまり、たとえば次のようなインメモリで動作するテスト用のモジュールを利用することで、CreateUser クラスには変更を加えることなく動作を変更することが可能になります。
+  
+  ```cs
+  public class InMemoryUserRepository : IUserRepository {
+    private readonly Dictionary<string, User> db = new Dictionary<string, User>();
+  
+    public Save(User user) {
+      db[user.Id] = user;
+    }
+  }
+  
+  public class CreateUser{
+    private readonly IUserRepository userRepository;
+  
+    public CreateUser(IUserRepository userRepository) { // userRepository には InMemoryUserRepository オブジェクトが代入されている
+      this.userRepository = userRepository;
+    }
+  }
+  ```
+  
+  ![clean-arrow.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/79c3e85d-5751-8844-7f37-32b5c6204f48.jpeg)
+  この矢印は、内側の層のオブジェクトは外側の層のオブジェクトに依存しないようにするということを表しています。
+  
+  # 用語と実装
+  レイヤーについてなんとなく掴んだところでそれ以外の用語の説明をします。
+  これらの用語を理解するには具体的な実装を見た方が理解しやすいと思いますので実装をここから交えます。
+  
+  よくあるユースケースの「ユーザ登録」を例にサンプルを作っていきましょう。
+  まずはコンソールで動くところを目指します。
+  
+  ## UseCase
+  ![clean-usecase.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/bfa7db8a-cd4a-d671-1c5e-c4f79f06a4d9.jpeg)
+  図では UseCases と記述されており UseCase が複数存在していることを示しています。
+  システムにはいくつものユースケースが存在しています。
+  このユースケースを表現するように UseCase を作成します。
+  
+  早速ユーザ登録の UseCase を作ってみましょう。
+  
+  ```csharp
+  public interface IUserCreateUseCase{
+    void Handle(UserCreateInputData inputData);
+  }
+  ```
+  
+  さて、勿論ユーザ登録にはパラメータが付き物です。
+  つまり入力用のパラメータが必要です。
+  
+  ```csharp
+  public class UserCreateInputData{
+    public UserCreateInputData(string userName){
+      UserName = userName;
+    }
+  
+    public string UserName { get; }
+  }
+  ```
+  この入力データは DTO (Data Transfer Object) として用意します。
+  
+  またユーザを登録したらその情報が必要となることもあります。従って出力用のデータも必要でしょう。
+  
+  ```csharp
+  public class UserCreateOutputData{
+    public UserCreateOutputData(string userId, DateTime created){
+      UserId = userId;
+      Created = created;
+    }
+  
+    public string UserId { get; }
+    public DateTime Created { get; }
+  }
+  ```
+  
+  これらの DTO で利用するデータタイプはプリミティブなものやプレーンな型で構成します。
+  列挙型や値オブジェクトを利用したい場合は Application Business Rules より内側のレイヤーの Enterprise Business Rules レイヤーの型であれば参照しても問題ないです。
+  
+  外側のレイヤーの型は絶対に参照してはいけません。依存のルールを破ることになります。
+  依存のルールを破った場合、外側のレイヤーの変更が内側のレイヤーに波及するという事態を招きます。
+  
+  ## Repository
+  Repository は Interface Adapter レイヤーにある GateWays にあたります。
+  ![clean-gateways.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/8466014c-ef74-e493-b127-9b2647c76101.jpeg)
+  リポジトリパターンで知られており、特定のモデルのデータ永続化についてを抽象化したオブジェクトです。
+  
+  今回の「ユーザ登録」ではユーザというモデルの永続化が必要になると思います。
+  それを表現したリポジトリは次のようになります。
+  
+  ```cs
+  public interface IUserRepository{
+    User FindByUserName(string userName);
+    void Save(User user);
+  }
+  ```
+  このユーザリポジトリを例えば mysql にデータ保存するように実装すると次のようになります。
+  
+  ```cs
+  public class UserRepository : IUserRepository {
+    public User FindByUserName(string username) {
+      using (var con = new MySqlConnection(Config.ConnectionString)) {
+        con.Open();
+        using (var com = con.CreateCommand()) {
+          com.CommandText = "SELECT * FROM t_user WHERE username = @username";
+          com.Parameters.Add(new MySqlParameter("@username", username));
+          var reader = com.ExecuteReader();
+          if (reader.Read()) {
+            var id = reader["id"] as string;
+            return new User(
+              id,
+              username
+            );
+          } else {
+            return null;
+          }
+        }
+      }
+    }
+  
+    public void Save(User user) {
+      using (var con = new MySqlConnection(Config.ConnectionString)) {
+        con.Open();
+  
+        bool isExist;
+        using (var com = con.CreateCommand()) {
+          com.CommandText = "SELECT * FROM t_user WHERE id = @id";
+          com.Parameters.Add(new MySqlParameter("@id", user.Id.Value));
+          var reader = com.ExecuteReader();
+          isExist = reader.Read();
+        }
+  
+        using (var command = con.CreateCommand()) {
+          command.CommandText = isExist
+            ? "UPDATE t_user SET username = @username WHERE id = @id"
+            : "INSERT INTO t_user VALUES(@id, @username)";
+          command.Parameters.Add(new MySqlParameter("@id", user.Id.Value));
+          command.Parameters.Add(new MySqlParameter("@username", user.UserName));
+          command.ExecuteNonQuery();
+        }
+      }
+    }
+  }
+  ```
+  他にもテスト用にメモリ上でデータベースのように動作するリポジトリなども実装することができます。
+  
+  ```csharp
+  public class InMemoryUserRepository : IUserRepository {
+    private readonly Dictionary<string, User> data = new Dictionary<string, User>();
+  
+    public void Save(User user) {
+      data[user.Id] = cloneUser(user);
+    }
+  
+    public User FindByUserName(string username) {
+      return data.Select(x => x.Value).FirstOrDefault(x => x.UserName == username);
+    }
+  
+    public IEnumerable<User> FindAll() {
+      return data.Values;
+    }
+  
+    private User cloneUser(User user) {
+      return new User(user.Id, user.UserName);
+    }
+  }
+  ```
+  
+  ## Presenter
+  ![clean-presenter.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/68708536-cfba-f239-eb68-bece926a6fb8.jpeg)
+  Presenter は表示するためのデータ加工を主な目的とします。
+  
+  例えば今回の OutputData では DateTime という型が使われています。
+  
+  ```csharp
+  public class UserCreateOutputData {
+    public UserCreateOutputData(string userId, DateTime created) {
+      UserId = userId;
+      Created = created;
+    }
+  
+    public string UserId { get; }
+    public DateTime Created { get; }
+  }
+  ```
+  さて、この```Created```フィールドを画面に表示するとき、通常であればどこかのタイミングで文字列型にするでしょう。
+  そのフォーマットもスマホや PC 等のプラットフォーム次第で '2018/9/1' がよかったり '2018年9月1日' の方が最適だったり表示の仕方に差異が生まれる場合があります。
+  
+  もしもこれをビジネスロジックがサポートするとどのようになるでしょう。
+  OutputData に次のようなプロパティが追加されることになります。
+  
+  ```csharp
+  public class UserCreateOutputData {
+    public UserCreateOutputData(string userId, DateTime created, string createdForSystemA, string createdForSystemB) {
+      UserId = userId;
+      Created = created;
+      CreatedForSystemA = createdForSystemA;
+      CreatedForSystemB = createdForSystemB;
+    }
+  
+    public string UserId { get; }
+    public DateTime Created { get; }
+    public string CreatedForSystemA { get; } // '2018/9/1'形式
+    public string CreatedForSystemB { get; } // '2018年9月1日'形式
+  }
+  ```
+  このフォーマットされたデータはコンストラクタで受け取っているので、日付形式を各種文字列にフォーマットする処理がビジネスロジックに記述されるでしょう。
+  そしてそれは、表現方法が増えるたびにビジネスロジックに改修を加える必要が出来るということを意味します。
+  
+  この問題に対応するためには、そもそもこういった表現の違いはビジネスロジックがサポートしないようにする必要があります。
+  そこで利用するのが Presenter です。
+  
+  Presenter は UseCase が出力する OutputData を View のための ViewModel への変換を行います。
+  具体的に実装してみましょう。
+  
+  ```csharp
+  public interface IUserCreatePresenter{
+    void Complete(UserCreateOutputData outputData);
+  }
+  ```
+  プレゼンターの interface を用意します。
+  
+  '2018/9/1' 形式を必要とする UI 用の Presenter が以下です。
+  
+  ```csharp
+  public class UserCreateViewModel{
+    public UserCreateViewModel(string userId, string createdDate){
+      UserId = userId;
+      CreatedDate = createdDate;
+    }
+  
+    public string UserId { get; }
+    public string CreatedDate { get; }
+  }
+  
+  public class UserCreatePresenter : IUserCreatePresenter{
+    public void Complete(UserCreateOutputData outputData){
+      var userId = outputData.UserId;
+      var createdDate = outputData.Created;
+      var createdDateText = createdDate.ToString("yyyy/MM/dd");
+      var model = new UserCreateViewModel(userId, createdDateText);
+      Console.WriteLine("id:" + model.UserId + " created:" + model.CreatedDate);
+    }
+  }
+  ```
+  また '2018年9月1日' 形式を必要とする UI 用の Presenter は次のようになります。
+  
+  ```csharp
+  public class SystemBUserCreateViewModel{
+    public SystemBUserCreateViewModel(string userId, string createdDate){
+      UserId = userId;
+      CreatedDate = createdDate;
+    }
+  
+    public string UserId { get; }
+    public string CreatedDate { get; }
+  }
+  
+  public class SystemBUserCreatePresenter : IUserCreatePresenter{
+    public void Complete(UserCreateOutputData outputData){
+      var userId = outputData.UserId;
+      var createdDate = outputData.Created;
+      var createdDateText = createdDate.ToString("yyyy年MM月dd日"); // 違いはここだけ
+      var model = new SystemBUserCreateViewModel(userId, createdDateText);
+      Console.WriteLine("id:" + model.UserId + " created:" + model.CreatedDate);
+    }
+  }
+  ```
+  また場合によってはユーザが作られたことだけを知らせるだけでよい場合もあります。
+  その場合は bool のフラグを持たせるだけの ViewModel を用意することになるでしょう。
+  
+  こういったプレゼンテーション毎の表現の違いを吸収するためのオブジェクトが Presenter です。
+  
+  ## Interactor
+  UseCase は interface で用意されているのでその実装はありません。
+  その実装は Interactor と呼ばれるオブジェクトです（右下の図にあります）。
+  ![clean-interactor.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/d78a6440-919d-16b6-b242-a11ff6625665.jpeg)
+  
+  Interactor は Enterprise Business Rule に所属するオブジェクトを協調させ、ユースケースを達成します。
+  ドメイン駆動設計でいうところのアプリケーションサービスです。
+  ビジネスロジックそれ自体を表すのではなく、このモデル（Entity）の調整に徹するように実装します。
+  
+  ユーザ登録の Interactor は次のようになるでしょう。
+  
+  ```csharp
+  public class UserCreateInteractor : IUserCreateUseCase {
+    private readonly IUserRepository userRepository;
+    private readonly IUserCreatePresenter presenter;
+  
+    public UserCreateInteractor(IUserRepository userRepository, IUserCreatePresenter presenter) {
+      this.userRepository = userRepository;
+      this.presenter = presenter;
+    }
+  
+    public void Handle(UserCreateInputData inputData) {
+      var username = inputData.UserName;
+      var duplicateUser = userRepository.FindByUserName(username);
+      if (duplicateUser != null) {
+        throw new Exception("duplicated");
+      }
+  
+      var user = new Domain.Users.User(username);
+      userRepository.Save(user);
+  
+      var outputData = new UserCreateOutputData(user.Id, DateTime.Now);
+      presenter.Complete(outputData);
+    }
+  }
+  ```
+  リポジトリとプレゼンターはそれぞれ interface で受け取っているのでこのスクリプトは特定のインフラストラクチャに依存していません。
+  
+  ## Controller
+  ![clean-controller.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/1f95e602-54ee-4a80-64ac-eea565d4fdf4.jpeg)
+  Controller はユーザの入力を解釈し、UseCase にそれを伝えます。
+  Presenter が出力のための変換を行っていたのに対して、Controller は入力を UseCase のために変換します。
+  
+  テレビのリモコンやゲームのコントローラ等をイメージしてみるとわかりやすいかもしれません。
+  テレビのリモコンはボタンを押すと、その押したという情報をテレビへの信号に「変換」し、テレビに送信します。
+  コントローラはシステムのために変換をしているのです。
+  
+  わかったようなわからないような例え話は置いておいて、実装を見てみましょう。
+  
+  ```csharp
+  public class UserController {
+    private readonly IUserCreateUseCase userCreateUseCase;
+  
+    public UserController(IUserCreateUseCase userCreateUseCase) {
+      this.userCreateUseCase = userCreateUseCase;
+    }
+  
+    public void CreateUser(string userName) {
+      var inputData = new UserCreateInputData(userName);
+      userCreateUseCase.Handle(inputData);
+    }
+  }
+  ```
+  コントローラはユーザからの入力 ```userName``` を UseCase が理解できる入力データに変換しています。
+  
+  ## interface とその実態
+  ここまで紹介したクラスには一部、コンストラクタで interface を受け取っているものがあります。
+  
+  - IUserCreateUseCase
+  - IUserRepository
+  - IUserPresenter
+  
+  これらの interface のことですね。
+  さて、この interface に収まる具象クラスはどこで定義されているのでしょうか。
+  
+  こういったコンストラクタで受け取る interface にどの具象クラスを当てはめるかを定義する一般的な手法として DIContainer があります。
+  DIContainer は次のようなことを可能にします。
+  
+  ```csharp
+  var serviceCollection = new ServiceCollection();
+  
+  // IUserRepository が要求されたら UserRepository を渡す
+  serviceCollection.AddTransient<IUserRepository, UserRepository>();
+  
+  // IUserCreatePresenter が要求されたら UserCreatePresenter を渡す
+  serviceCollection.AddTransient<IUserCreatePresenter, UserCreatePresenter>();
+  
+  // IUserCreateUsecase が要求されたら UserCreateInteractor を渡す
+  serviceCollection.AddTransient<IUserCreateUsecase, UserCreateInteractor>();
+  
+  var provider = serviceCollection.BuildServiceProvider();
+  
+  // IUserCreateUseCase を要求し UserInteractor のインスタンスを取得する
+  var interactor = provider.GetService<IUserCreateUseCase>();
+  ```
+  最後の ```interactor``` は UserInteractor のインスタンスが代入されます。
+  またその UserInteractor のインスタンスを作るときには以下のように設定された具象クラスのインスタンスが渡されています。
+  
+  ```csharp
+  public class UserCreateInteractor : IUserCreateUseCase {
+    private readonly IUserRepository userRepository;
+    private readonly IUserCreatePresenter presenter;
+  
+    //                                           ↓ UserRepository のインスタンス        ↓ UserPresenter　のインスタンス
+    public UserCreateInteractor(IUserRepository userRepository, IUserCreatePresenter presenter) {
+      this.userRepository = userRepository;
+      this.presenter = presenter;
+    }
+  ```
+  この DI フレームワークは C# 用のものなのでご利用の言語によっては記述に違いがあるかと思いますが、基本的な機能は同じです。
+  こういった DIContainer などを利用し、プログラム起動時に抽象クラスとそれに紐づける具象クラスを結びつける設定を行います。
+  
+  ローカルで動作するデバッグ用の設定や本番のプロダクト用の設定を行うスクリプトを作ってみましょう。
+  
+  ```csharp
+   static class Startup
+  {
+    public static IServiceCollection ServiceCollection { get; } = new ServiceCollection();
+  
+    public static void Run() {
+  #if DEBUG
+      setupDebug();
+  #else
+      setupProduct();
+  #endif
+    }
+  
+    private static void setupProduct() {
+      ServiceCollection.AddTransient<IUserRepository, UserRepository>();
+      ServiceCollection.AddTransient<IUserCreatePresenter, UserCreatePresenter>();
+      ServiceCollection.AddTransient<UserController>();
+    }
+  
+    private static void setupDebug() {
+      ServiceCollection.AddTransient<IUserRepository, InMemoryUserRepository>();
+      ServiceCollection.AddTransient<IUserCreatePresenter, UserCreatePresenter>();
+      ServiceCollection.AddTransient<UserController>();
+    }
+  }
+  ```
+  このようにプロジェクトの構成設定などを利用してテスト系と本番系を切り替えるようにします。
+  
+  ## コンソールプログラム
+  これまで用意してきたものを組み合わせてプログラムを完成させます。
+  
+  ```csharp
+  class Program {
+    static void Main(string[] args) {
+      Startup.Run();
+      var serviceCollection = Startup.ServiceCollection;
+      var serviceProvider = serviceCollection.BuildServiceProvider();
+  
+      Console.WriteLine("=======================================");
+      Console.WriteLine("Welcome to sample of clean architecture");
+      Console.WriteLine("=======================================");
+      Console.WriteLine();
+      Console.WriteLine("Enter the name of the new user.");
+      Console.WriteLine("username:");
+      Console.Write(">");
+      var username = Console.ReadLine();
+      var controller = serviceProvider.GetService<UserController>();
+      controller.CreateUser(username);
+  
+      Console.WriteLine("press any key to exit.");
+      Console.ReadKey();
+    }
+  }
+  ```
+  これでユーザ登録をするコンソールプログラムが完成しました。
+  
+  ## 処理の流れ
+  プログラムの処理の流れを追っていきます。
+  デバッグ構成でプログラムを実行したと仮定しましょう。
+  
+  まずプログラムは```Program.Main```の処理から始まり、そこでユーザの入力が```UserController```に渡されます。
+  
+  ```csharp
+  class Program {
+    static void Main(string[] args) {
+      Startup.Run();
+      var serviceCollection = Startup.ServiceCollection;
+      var serviceProvider = serviceCollection.BuildServiceProvider();
+  
+      Console.WriteLine("=======================================");
+      Console.WriteLine("Welcome to sample of clean architecture");
+      Console.WriteLine("=======================================");
+      Console.WriteLine();
+      Console.WriteLine("Enter the name of the new user.");
+      Console.WriteLine("username:");
+      Console.Write(">");
+      var username = Console.ReadLine();
+      var controller = serviceProvider.GetService<UserController>(); // UserController を DIContainer から取得して
+      controller.CreateUser(username); // UserController にユーザの入力が伝えられます
+  ```
+  ユーザコントローラを直接インスタンス化するのではなく、DIContainer を利用して各種設定したインスタンスが利用されるようにします。
+  続いて```UserController```の処理です。
+  
+  ```csharp
+  public class UserController {
+    private readonly IUserCreateUseCase userCreateUseCase;
+  
+    public UserController(IUserCreateUseCase userCreateUseCase) {
+      this.userCreateUseCase = userCreateUseCase; // 実態は DIContainer で登録された UserCreateInteractor です
+    }
+  
+    public void CreateUser(string userName) {
+      var inputData = new UserCreateInputData(userName); // Controller はここでユーザの入力を UseCase が分かる入力値に変換します
+      userCreateUseCase.Handle(inputData); // 変換された入力データを利用して UseCase を実行します
+    }
+  }
+  ```
+  入力データは```IUserCreateUseCase```を経由してその実態となるクラスの```UserCreateInteractor```に伝えられます。
+  
+  ```csharp
+  public class UserCreateInteractor : IUserCreateUseCase {
+    private readonly IUserRepository userRepository;
+    private readonly IUserCreatePresenter presenter;
+  
+    public UserCreateInteractor(IUserRepository userRepository, IUserCreatePresenter presenter) {
+      this.userRepository = userRepository; // InMemoryUserRepository です
+      this.presenter = presenter; // UserCreatePresenter です
+    }
+  
+    public void Handle(UserCreateInputData inputData) {
+      var username = inputData.UserName;
+      var duplicateUser = userRepository.FindByUserName(username); // InMemoryUserRepository.FindByUserName が呼ばれます
+      if (duplicateUser != null) {
+        throw new Exception("duplicated");
+      }
+  
+      var user = new Domain.Users.User(username);
+      userRepository.Save(user);
+  
+      var outputData = new UserCreateOutputData(user.Id, DateTime.Now);
+      presenter.Complete(outputData); // UserCreatePresenter.Complete が呼ばれます
+    }
+  }
+  ```
+  この```userReposiroty```と```presenter```はそれぞれ```InMemoryUserRepository```と```UserCreatePresenter```です。
+  リポジトリを利用してこれから作成しようとするユーザがいないことを確認したら、新規ユーザを登録し、その登録した情報が```IUserCreatePresenter```越しに```UserCreatePresenter```に伝えられます。
+  
+  ```csharp
+  public class UserCreatePresenter : IUserCreatePresenter{
+    public void Complete(UserCreateOutputData outputData){
+      var userId = outputData.UserId;
+      var createdDate = outputData.Created;
+      var createdDateText = createdDate.ToString("yyyy/MM/dd");
+      var model = new UserCreateViewModel(userId, createdDateText);
+      Console.WriteLine("id:" + model.UserId + " created:" + model.CreatedDate);
+    }
+  }
+  ```
+  この処理の流れをまとめると以下のようになります。
+  
+  1. ```UserController```が```IUserCreateUseCase```に入力データを伝える
+  2. ```IUserCreateUseCase```の実態である```UserCreateInteractor```に処理が移譲される
+  3. ```UserCreateInteractor```は処理を行い、その結果を```IUserCreatePresenter```に出力データを伝える
+  4. ```IUserCreatePresenter```の実態である```UserCreatePresenter```に処理が移譲される
+  5. ```UserCreatePresenter```は表示を行う
+   
+  これを図に表すと次のようになります。
+  ![clean-flow-cui.PNG](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/293368/3f64e75c-c34d-6230-4646-7ea7d2acbaf2.png)
+  
+  どこかで見たことありませんか？
+  
+  そう、クリーンアーキテクチャの図の右下のこれです。
+  ![clean_migisita.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/b0e54b9c-5811-fb1a-a2e4-d35e2eaf1d16.jpeg)
+  Flow of control と書かれている通り、この図は処理の流れを忠実に再現した図だったのです。
+  そうして改めてこの図を見ると &lt;I&gt; は interface を表していて、矢印については、白抜きの矢印は UML の汎化、普通の矢印は依存を表しているということに気づくかと思います。
+  
+  # で、何が嬉しいの？
+  ここまでのコードを見て、非常に冗長的なコードであると感じたかと思います。
+  これほどのことをしてまで得たいメリットは何でしょうか。
+  
+  大きなメリットは「テストができる形になる」ことだと思います。
+  
+  ## フロントエンドのテスト
+  フロントエンドとバックエンドを別のチームで作っていると仮定しましょう。
+  もしバックエンドが出来上がっていないとき、フロントエンドのチームはバックエンドが完成するまで待つのでしょうか。
+  
+  他に作業があるのであればそれでも構いません。
+  しかし、そういった作業もないときにバックエンドが完成しないからといって手持無沙汰にしているのは少々勿体ないです。
+  
+  そんなときはフロント開発用のテスト用 Interactor を利用してフロントエンドを作成してしまいます。
+  
+  ```csharp
+  public class MockUserInteractor : IUserCreateUseCase {
+    public static int id;
+    private readonly IUserCreatePresenter presenter;
+  
+    public MockUserInteractor(IUserCreatePresenter presenter){
+      this.presenter = presenter;
+    }
+  
+    public void Handle(UserCreateInputData inputData){
+      var outputData = new UserCreateOutputData(id++, DateTime.Now);
+      presenter.Complete(outputData);
+    }
+  }
+  ```
+  この```MockUserInteractor```を DIContainer に設定しておけば```UserController```はこのテスト用のオブジェクトを利用するのでバックエンドが出来ていなくても先行してフロントエンドの開発を行うことができます。
+  
+  また、他にも再現性の低いエラーのテストも容易になります。
+  もし Interactor で発生しづらいエラーが存在していて、それに対するフロントエンドの挙動を確認したい場合はそれ専用の Interactor を作って発生させればよいのです。
+  
+  ```csharp
+  public class ThrowComplexExceptionUserInteractor : IUserCreateUseCase {
+    public void Handle(UserCreateInputData inputData){
+      throw new ComplexException();
+    }
+  }
+  ```
+  
+  発生させるのが難しいエラーは世の中にいくつもあると思います。
+  そういったエラーに対するハンドリングを書いたものの、整合性のあるデータの準備が難しくテストをせずにリリースする、といったことをしなくてもよくなるのです。
+  
+  ## バックエンドのテスト
+  特定のインフラストラクチャに纏わる部分が interface になっており抽象化されているので、データベースや API などを利用せずにビジネスロジックのテストができます。
+  
+  フロントエンドのテストの際にも触れましたが、バックエンドでもテストしづらいエラーハンドリングは多く存在します。
+  
+  例えばデータベースで例外が起きたときのハンドリングのテストを行いたい場合はリポジトリで例外を起こせばテストできるでしょう。
+  
+  ```csharp
+  public class ThrowSQLExceptionUserRepository : IUserRepository{
+    public void Save(User user) {
+      throw new SQLException();
+    }
+  
+    public User FindByUserName(string userName){
+      throw new SQLException();
+    }
+  }
+  ```
+  
+  こういったスタブを都度作成するのは面倒なので、Mock を作るライブラリ（C# は Moq とか）を利用したり作ったりするよいでしょう。
+  
+  # もう一つの図
+  さてここで思い出してほしいのが、クリーンアーキテクチャにはもう一つ詳細な図がありました。
+  ![clean_boundary.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/d9071b69-e6ee-6f2b-dddd-6004707670b3.jpeg)
+  これです。
+  
+  この図に今回作成したものを当てはめてみましょう。
+  ![clean-my-boundary-before.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/9f06596f-b8fd-b7e1-cc3e-956db6d412c8.jpeg)
+  図中の &lt;I&gt; は interface で &lt;DS&gt; が Data Structure （データ構造体）だと思います。
+  
+  大体は再現できている状況ですが唯一外側の境界から```UserCreateViewModel```への依存する View が再現できていません。
+  今のスクリプトは Presenter が ViewModel を扱い、Console 表示をするということをしているので本来の View の役割を Presenter が行ってしまっています。
+  ここを再現するにはどうすればよいでしょうか。
+  
+  ## View の再現
+  ViewModel は Presenter と View を橋渡しするものですが、どうにもその配置方法については決まってないように見えます。
+  
+  書籍の記述を見てみても
+  
+  >Presenter はそのデータを適切な文字列にフォーマットして、Viewから発見できるViewmodelというシンプルなデータ構造に配置する
+  
+  とある程度しかなく、その実現方法については問われていないように思えます。
+  
+  そもそもなぜこの図では Presenter と View が分かれているのでしょうか。
+  それぞれの責務を考えてみましょう。
+  
+  Presenter の仕事は OutputData を ViewModel に変換し、表示可能な形式にすることです。
+  View の仕事はその ViewModel を表示することです。
+  
+  このようにする理由は、そもそも View がテストしづらいものであるので、「ただ表示する」ということだけに特化させてテストしないで済むようにしようという考えがあります。
+  この考えのことは Humble Object パターンとされています。
+  
+  View を Humble にするためのパターンとしてよく知られているものは MVVM パターンと MVP があります。
+  それぞれ考察してみます。
+  
+  ### MVVM パターン
+  MVVM パターンは View と ViewModel が双方向バインディングで同期します。
+  つまり ViewModel の値を変更したらその変更が View にも伝わります。
+  
+  Presenter が ViewModel の値を変更したときに View に伝われば図の状況になりそうです。
+  ただ MVVM パターンは双方向バインディングを実現するための仕組みが必要なのでフレームワーク次第です。
+  
+  ### MVP パターン
+  MVP パターンは Model View Presenter パターンの略です。
+  また MVP パターンは Humble View パターンと Supervising Controller パターンの二種類あります。
+  
+  Humble 繋がりでまずは Humble View パターンについて考察します。
+  
+  #### Humble View
+  Humble View パターンは Presenter が View を扱う形です。
+  まずは View から。
+  
+  ```csharp
+  public interface ICreateUserView{
+    void Update(UserCreateViewModel viewModel);
+  }
+  
+  public class ConsoleView : ICreateUserView{
+    public void Update(UserCreateViewModel viewModel){
+      Console.WriteLine("id:" + viewModel.UserId + " created:" + viewModel.CreatedDate);
+    }
+  }
+  ```
+  この View を Presenter が利用するようにします。
+  
+  ```csharp
+  public class UserCreatePresenter : IUserCreatePresenter {
+    private readonly ICreateUserView view;
+  
+    public UserCreatePresenter(ICreateUserView view){
+      this.view = view;
+    }
+  
+    public void Complete(UserCreateOutputData outputData) {
+      var userId = outputData.UserId;
+      var createdDate = outputData.Created;
+      var createdDateText = createdDate.ToString("yyyy/MM/dd");
+      var model = new UserCreateViewModel(userId, createdDateText);
+      view.Update(model);
+    }
+  }
+  ```
+  これにより Presenter と View を分けることができました。
+  
+  ただ、このコードを先ほどの図で表すと Presenter から矢印が伸びることになります。
+  丁度こんな図でしょうか（左下部分だけ抜粋）。
+  ![clean-my-boundary-mvp.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/2eba94ee-9f4f-63aa-ce3c-8cb04f61d433.jpeg)
+  こう考えると若干求めていたものと違うような印象を受けます。
+  もう一つのパターンはどうでしょうか。
+  
+  #### Supervising Controller パターン
+  こちらは Model の変更を View が Observer パターンで監視する形です。
+  
+  監視するためのオブジェクトを用意しましょう。
+  
+  ```csharp
+  // ViewModel の変更通知用
+  public class UserCreateSubject {
+    private UserCreateViewModel viewModel;
+  
+    public event Action<UserCreateViewModel> UserCreateViewModelUpdated;
+  
+    public UserCreateViewModel UserCreateViewModel {
+      get => viewModel;
+      set {
+        viewModel = value;
+        UserCreateViewModelUpdated(viewModel);
+      }
+    }
+  }
+  ```
+  この```UserCreateSubject```を使った場合の Presenter と View は次の通りです。
+  
+  ```csharp
+  public class UserCreatePresenter : IUserCreatePresenter {
+    private readonly UserCreateSubject subject;
+  
+    public UserCreatePresenter(UserCreateSubject subject) {
+      this.subject = subject;
+    }
+          
+    public void Complete(UserCreateOutputData outputData) {
+      var userId = outputData.UserId;
+      var createdDate = outputData.Created;
+      var createdDateText = createdDate.ToString("yyyy/MM/dd");
+      var model = new UserCreateViewModel(userId, createdDateText);
+      subject.UserCreateViewModel = model;
+    }
+  }
+  
+  public class ConsoleView : IDisposable {
+    private readonly UserCreateSubject subject;
+  
+    public ConsoleView(UserCreateSubject subject) {
+      // ViewModel の変更通知をサブスクライブ
+      subject.UserCreateViewModelUpdated += Update;
+    }
+  
+    public void Dispose() {
+      subject.UserCreateViewModelUpdated -= Update;
+    }
+  
+    public void Update(UserCreateViewModel viewModel) {
+      Console.WriteLine("id:" + viewModel.UserId + " created:" + viewModel.CreatedDate);
+    }
+  }
+  ```
+  イベントを発火してデータをやり取りし、疑似的に以下のような図になったと言ってもよいぐらいにはできたでしょうか。
+  ![clean-my-boundary-mvp-supervising.JPG](https://qiita-image-store.s3.amazonaws.com/0/293368/6c465d6f-27ff-aa71-7ae4-118d11a1dde4.jpeg)
+  
+  
+  ### Presenter と View についてのまとめ
+  View との繋ぎこみ部分については深く言及されているわけではありません。
+  ここに関してはフロントの都合により実装が大きく変わることが多いため、主題としたい問題ではないのだと思います。
+  
+  最も重要なのは OutputData にフロントのためのデータを含めるのではなく、OutputData から Presenter でフロントのためのデータを作る、という部分だと思います。
+  
+  # 終着点
+  ここまでコードベースで具体的な話をして参りましたが、この実装こそがクリーンアーキテクチャであると主張はしません。
+  
+  - ビジネスロジックが特定のインフラストラクチャに依存しないようにすること
+  - プレゼンテーション層のためのコードをビジネスロジックに書かないようにすること
+  
+  最低限この二つを守ることが大事です。
+  
+  この二つを守るとビジネスロジック（Interactor 以下）が独立し、特定の技術に依存しないようになります。
+  特定の技術に依存しないということはモジュールが交換可能になり、ひいてはテスタビリティの確保に繋がります。
+  
+  他にも語りたいことは多くあるのですが、私の言葉よりも Uncle Bob の書籍クリーンアーキテクチャから直接読み取った方が得られるものも多いかと思いますのでこの辺で。
+  
+  # 付録
+  冒頭でも述べましたが Web アプリケーションでのクリーンアーキテクチャ採用時のパターンの話が記事にしてあります。
+  記事: https://nrslib.com/clean-architecture/
+  内容は被るところも多いのですが Web アプリケーションならではの実装などがあります。
+  
+  もし興味があればご参照ください。
+  
+  あとがき: https://nrslib.com/postscript-implementation-clean-architectur
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false

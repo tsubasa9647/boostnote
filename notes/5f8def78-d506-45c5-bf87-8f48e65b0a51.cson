@@ -1,0 +1,21 @@
+createdAt: "2019-11-28T02:06:16.865Z"
+updatedAt: "2019-11-28T11:33:13.527Z"
+type: "MARKDOWN_NOTE"
+folder: "fd912f52cb88a9d949c5"
+title: "git memo"
+tags: []
+content: '''
+  # git memo
+  
+  ### put together commits
+  
+  
+  ```console
+  $ git rebase -i HEAD~?
+  ```
+  
+  
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false

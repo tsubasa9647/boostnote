@@ -1,0 +1,48 @@
+createdAt: "2020-02-03T04:13:57.241Z"
+updatedAt: "2020-02-05T13:18:39.078Z"
+type: "MARKDOWN_NOTE"
+folder: "03390587a29c740e5040"
+title: "ドメイン"
+tags: []
+content: '''
+  ## ドメイン
+  - capttain-tsubasa.com
+  - cap10tsubasa.com #zhao
+  - cap10-tsubasa.com #maeda
+  - capxtsubasa.com
+  - capx-tsubasa.com #maeda
+  - imamu.io #takai
+  - imamu.com
+  - matsu.com
+  
+  ## headless CMS
+  ## Amazon ECS
+  ## Ruby
+  - 自分でインスタンスをたてる
+    - ネットワーク関連
+      - 踏み台サーバー
+      - VPC
+      - セキュリティグループ
+      - サブネット
+      - cidr表記
+      - EC2
+      - ALB
+      - ACM
+      - route53
+      - routetable
+      - internetgateway
+      - nat
+    - DB
+      - RDS
+      - Document DB
+       
+  - ECSを使う
+    - EC2
+    - fargate(サーバーレス)
+  ## Go
+  - ECS一択
+    - fargate
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false

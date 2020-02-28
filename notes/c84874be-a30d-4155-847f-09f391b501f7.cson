@@ -1,0 +1,15 @@
+createdAt: "2019-11-24T14:15:00.417Z"
+updatedAt: "2019-11-24T14:16:07.770Z"
+type: "MARKDOWN_NOTE"
+folder: "639e0c4d86f5c961f94d"
+title: "参考文献"
+tags: []
+content: '''
+  #参考文献
+  
+  有限体を用いた有理数演算
+  [rational number reconstruction using chinese remainder theorem on gpu.pdf](:storage\\c84874be-a30d-4155-847f-09f391b501f7\\20ca6b38.pdf)
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false

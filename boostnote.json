@@ -1,0 +1,40 @@
+{
+  "folders": [
+    {
+      "key": "2f6da004f24cb4098ad2",
+      "color": "#1278BD",
+      "name": "Default"
+    },
+    {
+      "key": "58a5d51f09911f5a02b7",
+      "color": "#E10051",
+      "name": "SweeTest"
+    },
+    {
+      "key": "639e0c4d86f5c961f94d",
+      "color": "#E10051",
+      "name": "研究"
+    },
+    {
+      "key": "fd912f52cb88a9d949c5",
+      "color": "#FF8E00",
+      "name": "git memo"
+    },
+    {
+      "key": "03390587a29c740e5040",
+      "color": "#30D5C8",
+      "name": "ドメイン"
+    },
+    {
+      "key": "33900894468a4d5efc6a",
+      "color": "#3FD941",
+      "name": "SPI"
+    },
+    {
+      "key": "44c1b094ea0c17990466",
+      "color": "#FF8E00",
+      "name": "aws"
+    }
+  ],
+  "version": "1.0"
+}

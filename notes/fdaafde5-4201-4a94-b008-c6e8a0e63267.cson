@@ -1,0 +1,104 @@
+createdAt: "2019-12-06T03:56:30.712Z"
+updatedAt: "2019-12-06T03:57:21.953Z"
+type: "MARKDOWN_NOTE"
+folder: "58a5d51f09911f5a02b7"
+title: "sql migrate使い方"
+tags: []
+content: '''
+  # sql migrate使い方
+  ## 概要
+  Go製のデータベースmigrationツールとして`sql-migrate`を使って開発しているのでコマンドや動作仕様などを簡単に書く。
+  
+  ## 公式リポジトリ
+  https://github.com/rubenv/sql-migrate
+  
+  ## 特徴
+  - CLIツール
+  - SQLite, PostgreSQL, MySQL, Oracleなどの色々なデータベースをサポート
+  - スキーマの作成/変更/ロールバック機能
+  - ソースコードからの実行制御
+  - その他色々
+  
+  ## インストール
+  ```
+  $ go get github.com/rubenv/sql-migrate/...
+  ```
+  
+  ## 詳細
+  公式のREADMEを見れば分かる事だけど日本語で書いていく
+  
+  ### 設定ファイル
+  デフォルトは`dbconfig.yml`というファイル名で参照される。yml内の`env`キーでは`development`, `production`など環境ごとに設定を定義できる。migrationの実行を管理するテーブル名は`gorp_migrations`。`dir`は作成されたmigrationファイルの保存先。
+  オプションでこの辺りの名前は色々変更ができるし、デフォルトのままでも問題ない。
+  
+  ```dbconfig.yml
+  development:
+      dialect: mysql
+      dir: db/migrations
+      datasource: user_name:password@tcp(127.0.0.1)/dbname?charset=utf8mb4&collation=utf8mb4_general_ci&parseTime=true
+  
+  production:
+      dialect: postgres
+      dir: migrations/postgres
+      datasource: dbname=myapp sslmode=disable
+      table: migrations
+  ```
+  
+  ## コマンド色々
+  
+  ```
+  # ヘルプ
+  $ sql-migrate --help
+  ```
+  
+  ```
+  マイグレーション作成
+  # 以下のコマンドでは「20181005103536-create_users.sql」みたいなマイグレーションファイルが作成される
+  # ファイル名のdatetimeは自動で付与
+  
+  $ sql-migrate new create_users
+  ```
+  
+  ```
+  # マイグレーションの実行
+  $ sql-migrate up
+  ```
+  
+  ```
+  # マイグレーションをdryrunで実行。実行予定のsqlが出力される
+  $ sql-migrate up -dryrun
+  ```
+  
+  ```
+  # マイグレーションのロールバック
+  $ sql-migrate down
+  ```
+  
+  ```
+  # マイグレーションの実行状態確認
+  $ sql-migrate status
+  ```
+  
+  ## マイグレーションファイルの内容
+  マイグレーション作成すると`.sql`としてファイルが生成される。sqlコメント文を使用し`up`の処理なのか`down`の処理なのかを`-- +migration Up`、`-- +migration Down`でそれぞれ指定する。
+  
+  ```20181005103536-create_users.sql
+  -- +migrate Up
+  CREATE TABLE IF NOT EXISTS users (id int);
+  
+  -- +migrate Down
+  DROP TABLE IF EXISTS users;
+  ```
+  
+  ## migrationの実行管理テーブル
+  マイグレーション初回実行時に`gorp_migrations`というテーブルが自動で作成される。
+  このテーブルには実行したマイグレーションファイル名をインサートして実行済みか否かを管理してる。
+  
+  ## 終わり
+  本番環境でも使っていて特に問題はなし。
+  他にも色々な機能があるので詳しくは公式リポジトリのREADMEを読んでください
+  
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false

@@ -1,0 +1,94 @@
+createdAt: "2019-11-13T04:23:50.042Z"
+updatedAt: "2019-11-24T14:12:51.008Z"
+type: "MARKDOWN_NOTE"
+folder: "58a5d51f09911f5a02b7"
+title: "Markdown Samples"
+tags: []
+content: '''
+  # Markdown Samples
+  
+  # 見出しh1
+  ## 見出しh2
+  ### 見出しh3
+  ============
+  
+  Markdonwとは？
+  ------------
+  
+  ### 引用
+  
+  >Markdown（マークダウン）は、文書を記述するための軽量マークアップ言語のひとつである。
+  >本来はプレーンテキスト形式で手軽に書いた文書からHTMLを生成するために開発されたものである。
+  >しかし、現在ではHTMLのほかパワーポイント形式やLATEX形式のファイルへ変換する
+  >ソフトウェア（コンバータ）も開発されている。
+  >各コンバータの開発者によって多様な拡張が施されるため、各種の方言が存在する。
+  
+  
+  ### リンク
+  
+  [Wiki:Markdown](https://ja.wikipedia.org/wiki/Markdown):WikiのMarkdownのページ
+  
+  [qiita:Markdown](http://qiita.com/Qiita/items/c686397e4a0f4f11683d):Markdownチートシート
+  
+  ### 画像の挿入
+  ![Qiita](http://cdn.qiita.com/assets/siteid-reverse-6044901aace6435306ebd1fac6b7858c.png)
+  
+  ### 引用
+  >引用文です
+  >>ネストです
+  
+  ### 水平線
+  ***
+  * * *
+  ---
+  - - -
+  
+  ### 強調
+  
+  *ここがemタグで強調されます*  
+  _ここがemタグで強調されます_  
+  **ここがstrongタグで強調されます**  
+  __ここがstrongタグで強調されます__  
+  
+  
+  ### マークダウンのエスケープ」
+  \\#見出しh1
+  
+  ### リスト
+  
+  - フシギダネ
+  - フシギソウ
+  - フシギバナ
+  
+  
+  ### テーブル  
+  
+  | A列 | B列 | C列 |D列|E列|
+  |-----|:---:|-----|--:|---|
+  | あ  | い  | う  |え |お |
+  | か  | き  | く  |け |こ |
+  | さ  | し  | す  |せ |そ |
+  
+  
+  ### プログラムを記述する場合  
+  
+  ```rb
+  num = 0
+  while num < 2 do
+     print("num = ", num)
+  end
+  print("End")
+  ```
+  
+  ```php
+  function hello(){
+  　return "hello world!";
+  }
+  ```
+  
+  
+  
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false

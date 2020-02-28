@@ -1,0 +1,66 @@
+createdAt: "2019-12-07T08:35:09.792Z"
+updatedAt: "2019-12-07T08:35:55.851Z"
+type: "MARKDOWN_NOTE"
+folder: "58a5d51f09911f5a02b7"
+title: "スロークエリとしての判定時間を設定"
+tags: []
+content: '''
+  ## スロークエリとしての判定時間を設定
+  
+  ```
+  mysql> SHOW GLOBAL VARIABLES LIKE '%query_time%' ;
+  +-----------------+-----------+
+  | Variable_name   | Value     |
+  +-----------------+-----------+
+  | long_query_time | 10.000000 |
+  +-----------------+-----------+
+  1 row in set (0.24 sec)
+  
+  mysql> SET GLOBAL long_query_time = 0.5 ;
+  Query OK, 0 rows affected (0.25 sec)
+  
+  mysql> SHOW GLOBAL VARIABLES LIKE '%query_time%' ;
+  +-----------------+----------+
+  | Variable_name   | Value    |
+  +-----------------+----------+
+  | long_query_time | 0.500000 |
+  +-----------------+----------+
+  1 row in set (0.00 sec)
+  ```
+  
+  ## ログ出力するように
+  
+  ```
+  
+  mysql> SHOW GLOBAL VARIABLES LIKE '%slow_query%' ;
+  +---------------------+-------------------------------+
+  | Variable_name       | Value                         |
+  +---------------------+-------------------------------+
+  | slow_query_log      | ON                            |
+  | slow_query_log_file | /var/lib/mysql/sweet-slow.log |
+  +---------------------+-------------------------------+
+  2 rows in set (0.00 sec)
+  
+  mysql>  SET GLOBAL slow_query_log = 'ON' ;
+  Query OK, 0 rows affected (0.26 sec)
+  
+  
+  mysql> FLUSH LOGS ;
+  Query OK, 0 rows affected (0.10 sec)
+  
+  mysql> SHOW GLOBAL VARIABLES LIKE '%slow_query%' ;
+  +---------------------+--------------------------------+
+  | Variable_name       | Value                          |
+  +---------------------+--------------------------------+
+  | slow_query_log      | ON                             |
+  | slow_query_log_file | /var/lib/mysql/hoge-slow.log |
+  +---------------------+--------------------------------+
+  2 rows in set (0.00 sec)
+  
+  
+  mysql> FLUSH LOGS ;
+  ```
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false

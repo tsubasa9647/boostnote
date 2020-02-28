@@ -1,0 +1,276 @@
+createdAt: "2019-11-26T07:43:28.131Z"
+updatedAt: "2019-11-26T07:45:08.819Z"
+type: "MARKDOWN_NOTE"
+folder: "58a5d51f09911f5a02b7"
+title: "MVCモデル"
+tags: []
+content: '''
+  # MVCモデル
+  
+  # MVCモデルとは
+  そもそも、MVCモデルとは何でしょうか？
+  その答えを的確に示した記事がありました。
+  
+  [MVCモデルについて](https://qiita.com/s_emoto/items/975cc38a3e0de462966a)
+  
+  ざっくりまとめると、 **ソースコードをModel, View, 
+  Controllerと呼ばれる3つの役割に分割して、アプリケーションを設計しよう。** というものです。
+  
+  - View・・・ユーザーに見える画面のところ
+  - Model・・・ビジネスロジックを記述するところ
+  - Controller・・・上記の、ModelとViewをつなぎ合わせるところ
+  
+  となります。
+  画像で示すと以下のような形です。
+  
+  ![MVC.jpg](https://qiita-image-store.s3.amazonaws.com/0/92443/9b15b92b-0d08-2541-67ee-19a37fae83bc.jpeg)
+  
+  
+  # MVCの成り立ち
+  
+  では、なぜこのMVCモデルというのが確立されたのでしょうか。
+  これにもいい記事がありました。
+  
+  [MVC、本当にわかってますか？](https://qiita.com/tshinsay/items/5b1724baf32b8b5113c2)
+  
+  こちらもざっくり要約すると、
+  
+  - 最初はView, Model, Controllerもすべて1つのところで済まそうとしていた
+  - しかし、表示の見た目に関してはデザイナーが、データの処理の部分はエンジニアが担当した方がやりやすいのでViewとModelを切り離した
+  - Viewからの細かい指令により処理を分岐させるために、ViewとModelを繋ぐ橋渡し役としてControllerを切り離した
+  
+  というものだと思います。
+  
+  # MVCのメリット
+  上記でも挙げられていますが、3つに分割することによって以下のようなメリットが挙げられます。
+  
+  - デザイナーの人とエンジニアの人がお互いに作業がしやすくなる
+  - ModelとViewだけだと、Viewからの細かい命令によって処理が複雑化してしまうために、細かい命令を受け取るControllerがクッションになってくれる
+  
+  これが主に挙げられるメリットですが、僕はこれ以外にもメリットがあると思っています。
+  これが本記事の主題です。
+  
+  
+  # MVCのさらなるメリット
+  「ControllerはViewとModelを繋ぐ役割だから、ロジックはModelの方に書こう」
+  となるのはわかります。しかし、単にそれだけの理由ではなく、ロジックをModelに書くと以下のようなメリットがあると思っています。
+  
+  - Modelにロジックを集中させることにより、コードの再利用がしやすくなる
+  - Modelにバリデーションやコールバックを集中させることにより、予期せぬエラーやデータの書き換えを防ぐことができる
+  
+  実際にコードを書いて確認してみましょう。
+  
+  # コードを書いた例
+  
+  Twitterのようなアプリケーションを考えます。
+  ユーザーを表す`users_table`、ツイートを表す`tweets_table`、ツイートの添付画像の`images_table`があるとします。
+  ユーザーは複数のツイートをするので、`user : tweet = 1 : N`の関係になっています。
+  また、ツイートは複数の画像を添付できるので `tweet : image = 1 : N` の関係になっています。
+  ここで注意していただきたいのが、説明をわかりやすくするため、`tweets_table`に`published`というカラムを作成して、公開か非公開かを判定するフラグを作成していることです。
+  
+  `users_table`は以下のような構造になっています。
+  
+  | カラム名 | 説明 |　データ型　|
+  | --- | --- | --- |
+  | name | ユーザー名 |　string　|
+  
+  `tweets_table`は以下のような構造になっています。
+  
+  | カラム名 | 説明 |　データ型　|
+  | --- | --- | --- |
+  | content | ツイート内容 |　text　|
+  | published | 公開か下書きか（true：公開　false:下書き） | boolean　　|
+  | user_id | 紐づくユーザーのID | integer |
+  
+  `images_table`は以下のような構造になっています。
+  
+  | カラム名 | 説明 |　データ型　|
+  | --- | --- | --- |
+  | url | 画像URL |　string　|
+  | tweet_id | 紐づくツイートのID | integer |
+  
+  
+  モデルのソースコードは以下のようになっています。
+  
+  ```user.rb
+  class User < ApplicationRecord
+    has_many :tweets
+  end
+  ```
+  
+  ```tweet.rb
+  class Tweet < ApplicationRecord
+    belongs_to :user
+    has_many :images
+  end
+  ```
+  
+  ```image.rb
+  class Image < ApplicationRecord
+    belongs_to :tweet
+  end
+  ```
+  
+  今の状態はアソシエーションを組んでいるだけですね。
+  では、実際にここからコードを書いていきます。
+  
+  ## コードの再利用
+  
+  ここで、ユーザーがツイートを（公開で）投稿する機能を作成するとします。
+  `TweetsController`を作成し、`createアクション`を定義しましょう。
+  
+  ```tweets_controller.rb
+  class TweetsController < ApplicationController
+    def create
+      # 投稿したユーザーを取得
+      user = User.find(params[:user_id])
+      # Tweetレコードの作成（公開するためにpublishedはtrue）
+      tweet = Tweet.create(user_id: user.id, content: params[:content], published: true)
+  
+      # もし、image_urlがparamsの中に存在していたら、Imageレコードの作成
+      if params[:image_url].present?
+        Image.create(url: params[:image_url], tweet_id: tweet.id)
+      end
+    end
+  end
+  ```
+  
+  単純にすべてをコントローラーに記述するとこのような形になります。
+  これでツイートの投稿機能が実現できました。
+  
+  では、次にツイートを下書きで保存する機能を作成しましょう。
+  `DraftsController`に`createアクション`を作成しましょう。
+  実際は`TweetsController`で処理してもいいのですが、ここでは便宜上分けることにします。
+  
+  ```drafts_controller.rb
+  class DraftsController < ApplicationController
+    def create
+      user = User.find(params[:user_id])
+      Tweet.create(user_id: user.id, content: params[:content], published: false)
+  
+      if params[:image_url].present?
+        Image.create(url: params[:image_url])
+      end
+    end
+  end
+  ```
+  
+  このようになります。
+  これでツイートの下書き保存ができるようになりました。
+  
+  でも、待ってください。`TweetsController`の`createアクション`のコードと似てませんか？
+  はい、そうです。`published`が`true`か`false`かの違いしかありませんね。
+  
+  となると、これをひとまとめにしたら再利用できるんじゃない？
+  ということで、Modelにロジックを書いてみましょう。
+  
+  ```tweet.rb
+  class Tweet < ApplicationRecord
+    belongs_to :user
+    has_many :images
+  
+    def self.create_with_image(user, params, published)
+      Tweet.create(user_id: user.id, content: params[:content], published: published)
+  
+      if image_url.present?
+        Image.create(url: params[:image_url])
+      end
+    end
+  end
+  
+  ```
+  
+  結構強引でコードが汚いですが、このように記述することができます。
+  すると、`TweetsController`と`DraftsController`は以下のようにスッキリします。
+  
+  ```drafts_controller.rb
+  class DraftsController < ApplicationController
+    def create
+      user = User.find(params[:user_id])
+      Tweet.create_with_image(user, params, false)
+    end
+  end
+  ```
+  
+  ```tweets_controller.rb
+  class TweetsController < ApplicationController
+    def create
+      user = User.find(params[:user_id])
+      Tweet.create_with_image(user, params, true)
+    end
+  end
+  ```
+  
+  こうすることによって、***ツイートと画像を保存する***　という処理を複数のコントローラで使いまわすことができるようになりました。
+  これが**Modelにロジックを記述することでコードの再利用がしやすくなる**ということの理由です。
+  
+  
+  ## 予期せぬエラーやデータの書き換えを防ぐことができる
+  次に、ユーザーが新規登録した時のことを考えましょう。
+  ここでユーザー名に対してユニーク制約をかけたいとします。
+  このときに、`Userモデル`に対してバリデーションをかけないでやろうとします。
+  そうすると、`UsersController`は以下のようになります。
+  
+  ```users_controller.rb
+  class UsersController < ApplicationController
+    def create
+      users = User.where(name: params[:name])
+      
+      # params[:name]が他のユーザーの名前で使われているか確認して、なければ作成
+      if users.blank?
+        User.create(name: params[:name])
+      end
+    end
+  end
+  ```
+  
+  このようになりますね。
+  これでユーザー名がユニークになるように実装できました。
+  
+  では、他のところもユーザーを作成したいとしたらどうでしょうか？
+  
+  ```ruby
+  users = User.where(name: params[:name])
+      
+  # params[:name]が他のユーザーの名前で使われているか確認して、なければ作成
+  if users.blank?
+    User.create(name: params[:name])
+  end
+  ```
+  
+  このコードを毎回毎回書かないといけないのでしょうか？
+  万が一これが抜けてしまったらユニークにならないということが起こり得てしまいます。
+  
+  ここで先ほどの図が出てきます。
+  
+  ![MVC.jpg](https://qiita-image-store.s3.amazonaws.com/0/92443/9b15b92b-0d08-2541-67ee-19a37fae83bc.jpeg)
+  
+  これを見てみると、データベースとのやり取りはモデルを介してしかすることができません。
+  つまり、モデルの中でバリデーションをかけると、ユニークかどうか確認することを忘れても、必ずバリデーションがかかり、データが保存できないようになります。
+  
+  ```user.rb
+  class User < ApplicationRecord
+    has_many :tweets
+  
+    validates :name, uniqueness: true
+  end
+  ```
+  
+  これで、確実にユーザー名をユニークに保つことが保証されました。
+  これが***予期せぬエラーやデータの書き換えを防ぐことができる***ということです。
+  
+  
+  
+  
+  # まとめ
+  以上が僕の考えるMVCのメリットだと思っています。
+  （Ruby on Railsが定義に従っているだけというところも否定できませんが、、、。）
+  もっとメリットがあると思いますが、2つに絞って書いてみました。
+  
+  アプリケーション設計は答えがなく、合っている間違っているということはないと思います。
+  その上で、自分なりのメリットデメリットを考えて、アプリケーション設計ができるエンジニアが一流のエンジニアではないかなと思います。
+  
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false

@@ -1,0 +1,108 @@
+createdAt: "2019-12-08T08:51:26.654Z"
+updatedAt: "2019-12-08T08:59:01.096Z"
+type: "MARKDOWN_NOTE"
+folder: "639e0c4d86f5c961f94d"
+title: "Gnuplot"
+tags: []
+content: '''
+  # Gnuplot
+  
+  ## reset
+  ```bash
+  reset
+  ```
+  ## csvから読み込む
+  ```bash
+  set datafile separator ","
+  ```
+  ## csvファイルのプロット
+  ```bash
+  plot "???.csv"
+  ```
+  
+  ## グラフを重ねる
+  ```bash
+  replot "???.csv"
+  ```
+  
+  ### グラフをファイルに出力する
+  描画したグラフをファイルとして出力することができます。ファイルの種類としては.pngファイルと.epsファイルがあります。
+  
+  ```bash
+  gnuplot> plot sin(x)
+  gnuplot> set terminal pngcairo
+  gnuplot> set out "sin.png"
+  gnuplot> replot
+  ```
+  2行目は「set terminal png」でもいけますが、**「pngcairo」とすることで解像度がぐっと良くなります**。
+  
+  最後の**replot**を忘れないようにしてください。3行目の「set out」の段階で、.pngファイルは生成されますが中身は空です。（ファイルが出力されるディレクトリは**pwd**で確認することができます）
+  
+  コマンド以外でも、グラフが表示されたときの画面の左上にあるフロッピーのアイコンを押すことでもグラフの保存をすることができます。
+  
+  #グラフの体裁を整える
+  
+  上でグラフの書き方と保存の仕方を書きました。このグラフを利用するのが自分だけならここまでの情報でほぼ足りるのですが、他人に見せるとなるとグラフの体裁を整える必要があります。
+  
+  **それぞれの操作をしたあとにreplotをすることで変更が反映されます**。
+  
+  ### 軸の設定
+  x軸、y軸の範囲を変更するには、
+  
+  ```bash
+  gnuplot> set xr[0:1]    #0<=x<=1
+  gnuplot> set yr[-1:1]    #-1<=y<=1
+  ```
+  軸を対数スケールにするには、
+  
+  ```bash
+  gnuplot> set logscale y    #y軸をlogスケールに
+  ```
+  
+  ### グラフの形状
+  
+  アスペクト比を変更するには
+  
+  ```bash
+  gnuplot> set size ratio 2    #縦が横の2倍
+  gnuplot> set size square    #縦横比１
+  gnuplot> set size nosquare    #縦横比１を解除
+  ```
+  サイズを変更するには、
+  
+  ```bash
+  gnuplot> set size 0.6, 0.4    #横を画面の0.6倍、縦を画面の0.4倍
+  gnuplot> set bmargin 6    #グラフの下の余白を6に広げる
+  ```
+  グラフ自体の調整は、
+  
+  ```bash
+  gnuplot> plot sin(x) lw 10    #sin(x)のグラフを線の太さを10にして描画
+  gnuplot> plot sin(x) lt rgb "red"    #sin(x)のグラフを赤線で表示
+  gnuplot> plot sin(x) with lines    #sin(x)を線で描画（デフォルト）
+  gnuplot> plot sin(x) with points    #sin(x)を点で描画
+  ```
+  
+  ### 目盛りの調整
+  
+  ```bash
+  gnuplot> set xtics 2    #2ごとに主目盛りを入れる
+  gnuplot> set mxtics 5    #主目盛り間を5等分するように副目盛りを入れる
+  gnuplot> set tics font "Arial, 24"    #目盛りの数字のフォントをArial、サイズを24に
+  ```
+  
+  ### 軸ラベル
+  
+  ```bash
+  gnuplot> set xlabel "t [s]"    #ｘ軸のラベルをt [s]にする
+  gnuplot> set ylabel "x [m]"    #y軸のラベルを x[m]にする
+  gnuplot> set xlabel font "Arial, 24"    #x軸のラベルのフォントをサイズ24のArialに
+  gnuplot> set xlabel offset 0,-1    #x軸のラベルを(0,-1)方向に動かす
+  gnuplot> set cblabel "Temp" tc rgb "white" font ",30" #フォント30
+  ```
+  
+  
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false

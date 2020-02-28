@@ -1,0 +1,17 @@
+createdAt: "2019-11-28T08:49:03.566Z"
+updatedAt: "2019-11-28T08:50:38.737Z"
+type: "MARKDOWN_NOTE"
+folder: "2f6da004f24cb4098ad2"
+title: "goのデプロイが楽"
+tags: []
+content: '''
+  # goのデプロイが楽
+  静的型付け
+  
+  ランタイムの用意がない
+  
+  ディスクの容量を抑えれる
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false

@@ -1,0 +1,170 @@
+createdAt: "2019-11-13T04:42:52.982Z"
+updatedAt: "2019-11-24T14:12:52.410Z"
+type: "MARKDOWN_NOTE"
+folder: "58a5d51f09911f5a02b7"
+title: "MySQL Samples"
+tags: []
+content: '''
+  # MySQL Samples
+  ### MySQL呼び出し
+  （ルートなのでユーザ，パスワードなし）
+  
+  ```
+  $ mysql -u root
+  ```
+  
+  ### データベース参照
+  
+  ```sql
+  
+  mysql> SHOW DATABASES;
+  ```
+  
+  ```
+  
+  +--------------------+
+  | Database           |
+  +--------------------+
+  | information_schema |
+  | mysql              |
+  | performance_schema |
+  | sys                |
+  +--------------------+
+  ```
+  
+  ### データベース作成
+  データベース名「chintai」を作成
+  
+  ```sql
+  mysql> CREATE DATABASE chintai;
+  ```
+  データベースが作られたか確認します．できてますね
+  
+  ```
+  +--------------------+
+  | Database           |
+  +--------------------+
+  | chintai            |
+  | information_schema |
+  | mysql              |
+  | performance_schema |
+  | sys                |
+  +--------------------+
+  ```
+  
+  ### データベース選択
+  
+  ```sql
+  
+  mysql> USE chintai;
+  ```
+  
+  
+  ### テーブル作成
+  データベース「chintai」に「suumo」というテーブルを作成します．
+  
+  ```sql
+  
+  mysql> CREATE TABLE chintai. suumo(id INT(20) NOT NULL PRIMARY KEY AUTO_INCREMENT , name VARCHAR(100) , price INT(20) , toilet VARCHAR(100) , station VARCHAR(100) , type VARCHAR(100));
+  ```
+  ||id  |name  |price  |toilet|station|type|
+  |---|---|---|---|---|---|---|---|
+  |説明|ID（重複なし）|物件名|家賃|トイレ・バス別(separated)か|最寄駅|木造・鉄筋コンクリ|
+  |型|INT|VARCHAR|INT|VARCHAR|VARCHAR|VARCHAR|
+  
+  ・***NOT NULL PRIMARY KEY AUTO_INCREMENT***をつけると，指定しなくても自動でID（INT型）が付与されます．
+  ・カラム「ID」なしに中身を追加することはできない訳です．
+  ・顧客のデータ管理などにおいて，異なるお客様のIDが同じIDにタグ付いたら大変なことになっちゃいますよね笑
+  ・今はまだカラム（の名前と型）を宣言しただけで，このテーブルの中身は空っぽです．
+  
+  
+  ### データベースに存在するテーブル一覧を参照
+  
+  ```sql
+  mysql> show tables;
+  ```
+  
+  ```
+  +-------------------+
+  | Tables_in_chintai |
+  +-------------------+
+  | suumo             |
+  +-------------------+
+  ```
+  ***chintai***というデータベースの中に***suumo***というテーブルが存在していることになります
+  
+  
+  
+  ### テーブルの中身の追加
+  作ったカラムに対応したValue（中身）を追加します
+  
+  ```sql
+  
+  mysql> INSERT INTO suumo VALUES (1,'宇都宮タワマン',75000,'S','宇都宮','RC');
+  ```
+  または
+  
+  ```sql
+  
+  mysql> INSERT INTO suumo (id, name, price, toilet, station, type) VALUES (1,'宇都宮タワマン', 75000,'S','宇都宮','RC');
+  ```
+  
+  ### テーブルの中身参照
+  
+  ```sql
+  SELECT * FROM suumo;
+  ```
+  
+  ```
+  +----+-----------------------+-------+--------+-----------+------+
+  | id | name                  | price | toilet | station   | type |
+  +----+-----------------------+-------+--------+-----------+------+
+  |  1 |    宇都宮タワマン        | 75000 |  S     |  宇都宮    | RC   |
+  +----+-----------------------+-------+--------+-----------+------+
+  ```
+  ・S: Separated（トイレ・バス別）
+  ・NS: Not Separated（トイレ・バス一緒）
+  ・RC: Reinforced Concrete（鉄筋コンクリ）
+  ・W: Wood（木造）
+  
+  てなかんじで自分なりの***suumo***作ってみた
+  <img width="827" alt="sql1.png" src="https://qiita-image-store.s3.amazonaws.com/0/377231/325ac8c0-0032-1f09-bc25-185ea4c466a5.png">
+  
+  ### テーブルの削除
+  
+  ```sql
+  DROP TABLE suumo;
+  ```
+  
+  ### データベースの削除
+  
+  ```sql
+  
+  DROP DATABASE chintai;
+  ```
+  
+  # 中級編
+  ・具体例の方がわかりやすいと思うので初級編で作った***suumo***使ってやります
+  ***suumo***
+  <img width="827" alt="sql1.png" src="https://qiita-image-store.s3.amazonaws.com/0/377231/325ac8c0-0032-1f09-bc25-185ea4c466a5.png">
+  
+  ### ***id***と***price***（家賃）のカラムのみ表示したい
+  
+  ```sql
+  mysql> SELECT id, price FROM suumo;
+  ```
+  <img width="146" alt="sql2.png" src="https://qiita-image-store.s3.amazonaws.com/0/377231/18479386-5f3a-a408-847b-c715c03e095f.png">
+  
+  
+  ### ***price***（家賃）の安い順に表示したい
+  
+  ```sql
+  mysql> SELECT * FROM suumo ORDER BY price;
+  ```
+  実際の**SUUMO**とかでも「家賃の安い順」みたいなボタン押しますよね！
+  あんなかんじです
+  <img width="839" alt="sql3.png" src="https://qiita-image-store.s3.amazonaws.com/0/377231/db6d4665-03ba-ecf8-6a1f-1555ac5c68bb.png">
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false

@@ -1,0 +1,100 @@
+createdAt: "2019-11-13T06:48:44.608Z"
+updatedAt: "2019-11-24T14:12:47.168Z"
+type: "MARKDOWN_NOTE"
+folder: "58a5d51f09911f5a02b7"
+title: "MySQL EXPLAINのそれぞれの項目についての覚書"
+tags: []
+content: '''
+  # MySQL EXPLAINのそれぞれの項目についての覚書
+  
+  ## id/select_type/table
+  * どのテーブルがどの順番でアクセスされているか
+  
+  ### id
+  * 実行順番を表す
+  * 数字が同じなら複数のクエリが１つのクエリとして実行されている
+  
+  ### select_typeの詳細
+  * **SIMPLE**
+  	* 単一のテーブル
+  * サブクエリが絡む場合
+  	* **PRIMARY**
+  		* 外部クエリ
+  	* **SUBQUERY**
+  		* 相関関係の無いサブクエリ
+  	* **DEPENDENT SUBQUERY**
+  		* 相関関係のあるサブクエリ
+  	* **UNCACHEABLE SUBQUERY**
+  		* 実行する度に結果が変わる可能性のあるサブクエリ
+  	* **DERIVED**
+  		* FROM句で用いられているサブクエリ
+  
+  ### table
+  * 対象テーブルの名称
+  
+  ## partition
+  * どのpartisionテーブルを使用したか
+  * 複数にまたがる時は複数の値が表示される
+  
+  ## type
+  * レコードアクセスタイプ
+  
+  ### typeの詳細
+  * **const**
+  	* pk or uniqueインデックスを使用したルックアップによるアクセス
+  	* 最も速い
+  * **eq_ref**
+  	* joinにおいてのconstと同義
+  * **ref**
+  	* constでないインデックスを使って等価検索(where k = v)を行った時に使用されるアクセス
+  * **range**
+  	* indexを用いた範囲検索
+  * **index**
+  	* フルインデックススキャン、インデックス全体をスキャンしているので遅い
+  * **ALL**
+  	* フルテーブルスキャン、インデックスが全く使用されていないことを示す
+  
+  ## possible_keys
+  * optimizerがテーブルのアクセスに利用可能だと判断したインデックス
+  
+  ## key
+  * 実際にoptimizerによって使用されたキー
+  
+  ## key_len
+  * 選択されたキーの長さ。長さは短いほうが高速。
+  
+  ## ref
+  * 検索条件でkeyと比較されている値やカラムの種類。
+  	* **定数の場合**
+  		* const
+  	* **JOINを使用している場合**
+  		* 結合する相手側のテーブルで検索条件として利用されているカラムが表示される
+  
+  ## rows
+  * そのテーブルからfetchされる行数の見積もり。
+  * 大まかな見積もりなので、実際にfetchする行数とは変わる可能性がある。
+  	* しかしDERIVEDテーブルだけは実際に実行しないと行数の見積もりができないので、DERIVEDテーブルの見積もりだけは正確
+  
+  ## filtered
+  * テーブル条件によってフィルタ処理される行の推定の割合
+  * `rows × filtered / 100` が前のテーブルと結合される行数を表す
+  
+  ## Extra
+  * optimizerがどのような戦略を立てたかを知ることが出来る
+  * 多いのでここを見ることを推奨
+  	* [EXPLAIN の追加情報(en/5.7)](https://dev.mysql.com/doc/refman/5.7/en/explain-output.html#explain-extra-information)
+  	* [(ja/5.6)](https://dev.mysql.com/doc/refman/5.6/ja/explain-output.html#explain-extra-information)
+  
+  
+  
+  # 参考リンク
+  * [8.8.2 EXPLAIN 出力フォーマット](https://dev.mysql.com/doc/refman/5.6/ja/explain-output.html)
+  * [MySQLのEXPLAINを徹底解説!!](http://nippondanji.blogspot.jp/2009/03/mysqlexplain.html)
+  * [MySQLでのSQLチューニングについて（EXPLAINの見方）](http://labs.opentone.co.jp/?p=1985)
+  * [検証：パーティショニングテーブルの挙動](http://qiita.com/hit/items/3dea20c9f5872edc8909)
+  * [パーティショニングの使用例 - カーディナリティが低いカラムを使って検索する場合](http://nippondanji.blogspot.jp/2009/04/1.html)
+  
+'''
+linesHighlighted: []
+isStarred: false
+isTrashed: false
